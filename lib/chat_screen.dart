@@ -1,0 +1,148 @@
+import 'package:flutter/material.dart';
+
+class ChatScreen extends StatefulWidget {
+  final Map<String, dynamic> player;
+  const ChatScreen({super.key, required this.player});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController messageController = TextEditingController();
+  final List<Map<String, dynamic>> messages = [
+    // Tin nhắn mẫu
+    {'fromMe': false, 'text': 'Chào bạn!'},
+    {'fromMe': true, 'text': 'Hi, mình muốn thuê duo.'},
+    {'fromMe': false, 'text': 'Bạn cần thuê mấy giờ?'},
+  ];
+
+  void sendMessage() {
+    final text = messageController.text.trim();
+    if (text.isEmpty) return;
+    setState(() {
+      messages.add({'fromMe': true, 'text': text});
+      messageController.clear();
+    });
+    // TODO: Gửi tin nhắn lên server nếu cần
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final player = widget.player;
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.deepOrange),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundImage: player['avatarUrl'] != null
+                  ? NetworkImage(player['avatarUrl'])
+                  : null,
+              child: player['avatarUrl'] == null
+                  ? const Icon(Icons.person, color: Colors.deepOrange)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                player['username'] ?? '',
+                style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: const Color(0xFFF7F7F9),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final msg = messages[index];
+                final isMe = msg['fromMe'] as bool;
+                return Align(
+                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isMe ? Colors.deepOrange : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(16),
+                        topRight: const Radius.circular(16),
+                        bottomLeft: Radius.circular(isMe ? 16 : 4),
+                        bottomRight: Radius.circular(isMe ? 4 : 16),
+                      ),
+                      boxShadow: [
+                        if (!isMe)
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                      ],
+                    ),
+                    child: Text(
+                      msg['text'],
+                      style: TextStyle(
+                        color: isMe ? Colors.white : Colors.black87,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(
+            color: Colors.white,
+            padding: EdgeInsets.only(
+              left: 12,
+              right: 8,
+              bottom: MediaQuery.of(context).padding.bottom + 8,
+              top: 8,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Nhập tin nhắn...',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                    ),
+                    onSubmitted: (_) => sendMessage(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                CircleAvatar(
+                  backgroundColor: Colors.deepOrange,
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: sendMessage,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+} 

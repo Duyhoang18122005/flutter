@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'hire_player_screen.dart';
+import 'donate_player_screen.dart';
+import 'chat_screen.dart';
 
 class _StatItem extends StatelessWidget {
   final String label;
@@ -155,7 +157,18 @@ class PlayerDetailScreen extends StatelessWidget {
                               border: Border.all(color: Colors.orange, width: 2),
                             ),
                             padding: const EdgeInsets.all(8),
-                            child: const Icon(Icons.attach_money, color: Colors.orange, size: 28),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(24),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DonatePlayerScreen(player: player),
+                                  ),
+                                );
+                              },
+                              child: const Icon(Icons.attach_money, color: Colors.orange, size: 28),
+                            ),
                           ),
                           const SizedBox(height: 8),
                         ],
@@ -200,7 +213,18 @@ class PlayerDetailScreen extends StatelessWidget {
                               border: Border.all(color: Colors.orange, width: 2),
                             ),
                             padding: const EdgeInsets.all(8),
-                            child: const Icon(Icons.chat_bubble_outline, color: Colors.orange, size: 28),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(24),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatScreen(player: player),
+                                  ),
+                                );
+                              },
+                              child: const Icon(Icons.chat_bubble_outline, color: Colors.orange, size: 28),
+                            ),
                           ),
                           const SizedBox(height: 8),
                         ],

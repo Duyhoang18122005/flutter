@@ -7,12 +7,12 @@ class ApiService {
   static const Duration timeout = Duration(seconds: 10);
   static final storage = FlutterSecureStorage();
 
-  // Thêm headers chung
+
   static Map<String, String> get _headers => {
     'Content-Type': 'application/json',
   };
 
-  // Thêm headers có token
+
   static Future<Map<String, String>> get _headersWithToken async {
     final token = await getToken();
     return {

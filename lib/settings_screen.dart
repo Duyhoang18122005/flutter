@@ -1,8 +1,60 @@
 import 'package:flutter/material.dart';
 import 'register_player_screen.dart';
+import 'login_screen.dart';
+import 'api_service.dart';
+import 'utils/notification_helper.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  void showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green[700],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(8),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> handleLogout() async {
+    final shouldLogout = await NotificationHelper.showConfirmDialog(
+      context,
+      title: 'Xác nhận đăng xuất',
+      content: 'Bạn có chắc chắn muốn đăng xuất?',
+      confirmText: 'Đăng xuất',
+    );
+
+    if (shouldLogout != true) return;
+
+    await ApiService.logout();
+    if (!mounted) return;
+    
+    NotificationHelper.showSuccess(context, 'Đăng xuất thành công!');
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +94,7 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               // Thông tin
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -68,21 +120,6 @@ class SettingsScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     _SettingRow(icon: Icons.policy, label: "Chính sách", color: Colors.red),
                     const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        onPressed: () {},
-                        child: const Text("Đăng xuất", style: TextStyle(fontSize: 18, color: Colors.white)),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
                     ListTile(
                       leading: Icon(Icons.person_add, color: Colors.deepOrange),
                       title: Text('Đăng ký làm Player'),
@@ -97,6 +134,23 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + 12),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            onPressed: handleLogout,
+            child: const Text("Đăng xuất", style: TextStyle(fontSize: 18, color: Colors.white)),
           ),
         ),
       ),

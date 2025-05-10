@@ -4,6 +4,7 @@ import 'register_screen.dart';
 import 'home_screen.dart';
 import 'main.dart';
 import 'api_service.dart';
+import 'utils/notification_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +27,48 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  void showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red[700],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(8),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green[700],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        margin: const EdgeInsets.all(8),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   Future<void> handleLogin() async {
     validateInputs();
     if (usernameError != null || passwordError != null) return;
@@ -37,15 +80,16 @@ class _LoginScreenState extends State<LoginScreen> {
       final error = await ApiService.login(username, password);
       if (error == null) {
         if (!mounted) return;
+        NotificationHelper.showSuccess(context, 'Đăng nhập thành công!');
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigation()),
         );
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        NotificationHelper.showError(context, error);
       }
     } finally {
       if (mounted) {
@@ -206,19 +250,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MainNavigation()),
-                    );
-                  },
-                  child: const Text(
-                    'Bỏ qua phần đăng nhập!',
-                    style: TextStyle(color: Colors.deepOrange, decoration: TextDecoration.underline, fontWeight: FontWeight.w500),
-                  ),
                 ),
                 const SizedBox(height: 24),
               ],
