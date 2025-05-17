@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'settings_screen.dart';
+import 'message_list_screen.dart';
 
 void main() {
   runApp(const PlayerDuoApp());
@@ -37,7 +38,7 @@ class _MainNavigationState extends State<MainNavigation> {
   static const List<Widget> _screens = <Widget>[
     HomeScreen(),
     Placeholder(), // CommunityScreen(),
-    Placeholder(), // ChatScreen(),
+    MessageListScreen(), // Chat tab
     Placeholder(), // NotificationScreen(),
     SettingsScreen(),
   ];

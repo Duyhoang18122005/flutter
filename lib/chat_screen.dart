@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final Map<String, dynamic> player;
@@ -10,21 +11,32 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController messageController = TextEditingController();
-  final List<Map<String, dynamic>> messages = [
-    // Tin nhắn mẫu
-    {'fromMe': false, 'text': 'Chào bạn!'},
-    {'fromMe': true, 'text': 'Hi, mình muốn thuê duo.'},
-    {'fromMe': false, 'text': 'Bạn cần thuê mấy giờ?'},
-  ];
+  List<dynamic> messages = [];
+  bool isLoading = false;
 
-  void sendMessage() {
+  @override
+  void initState() {
+    super.initState();
+    loadConversation();
+  }
+
+  Future<void> loadConversation() async {
+    setState(() => isLoading = true);
+    messages = await ApiService.getConversation(widget.player['id']);
+    setState(() => isLoading = false);
+  }
+
+  Future<void> sendMessage() async {
     final text = messageController.text.trim();
     if (text.isEmpty) return;
-    setState(() {
-      messages.add({'fromMe': true, 'text': text});
+    final sent = await ApiService.sendMessage(
+      receiverId: widget.player['id'],
+      content: text,
+    );
+    if (sent != null) {
       messageController.clear();
-    });
-    // TODO: Gửi tin nhắn lên server nếu cần
+      await loadConversation();
+    }
   }
 
   @override
@@ -64,45 +76,48 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                final isMe = msg['fromMe'] as bool;
-                return Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isMe ? Colors.deepOrange : Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(16),
-                        topRight: const Radius.circular(16),
-                        bottomLeft: Radius.circular(isMe ? 16 : 4),
-                        bottomRight: Radius.circular(isMe ? 4 : 16),
-                      ),
-                      boxShadow: [
-                        if (!isMe)
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                    reverse: true,
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[messages.length - 1 - index];
+                      final isMe = msg['sender']?['id'] != null && msg['sender']['id'] != player['id'];
+                      return Align(
+                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isMe ? Colors.deepOrange : Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(16),
+                              topRight: const Radius.circular(16),
+                              bottomLeft: Radius.circular(isMe ? 16 : 4),
+                              bottomRight: Radius.circular(isMe ? 4 : 16),
+                            ),
+                            boxShadow: [
+                              if (!isMe)
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                            ],
                           ),
-                      ],
-                    ),
-                    child: Text(
-                      msg['text'],
-                      style: TextStyle(
-                        color: isMe ? Colors.white : Colors.black87,
-                        fontSize: 16,
-                      ),
-                    ),
+                          child: Text(
+                            msg['content'] ?? '',
+                            style: TextStyle(
+                              color: isMe ? Colors.white : Colors.black87,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           Container(
             color: Colors.white,

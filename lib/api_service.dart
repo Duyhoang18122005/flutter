@@ -6,12 +6,11 @@ class ApiService {
   static const String baseUrl = 'http://10.0.2.2:8080/api';
   static const Duration timeout = Duration(seconds: 10);
   static final storage = FlutterSecureStorage();
-
+  static Map<String, dynamic>? _currentUser;
 
   static Map<String, String> get _headers => {
     'Content-Type': 'application/json',
   };
-
 
   static Future<Map<String, String>> get _headersWithToken async {
     final token = await getToken();
@@ -36,6 +35,14 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         await storage.write(key: 'jwt', value: data['token']);
+
+        // Gọi API lấy thông tin user sau khi đăng nhập thành công
+        final userInfo = await getUserInfo();
+        if (userInfo != null) {
+          _currentUser = userInfo;
+          await storage.write(key: 'user', value: jsonEncode(_currentUser));
+        }
+
         return null;
       } else {
         final error = jsonDecode(response.body);
@@ -80,6 +87,8 @@ class ApiService {
   static Future<void> logout() async {
     try {
       await storage.delete(key: 'jwt');
+      await storage.delete(key: 'user');
+      _currentUser = null;
     } catch (e) {
       print('Lỗi khi đăng xuất: ${e.toString()}');
     }
@@ -161,6 +170,110 @@ class ApiService {
       }
     } catch (e) {
       return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getCurrentUser() async {
+    if (_currentUser != null) return _currentUser;
+    
+    try {
+      final userJson = await storage.read(key: 'user');
+      if (userJson != null) {
+        _currentUser = jsonDecode(userJson) as Map<String, dynamic>;
+        return _currentUser;
+      }
+      return null;
+    } catch (e) {
+      print('Lỗi khi đọc thông tin người dùng: ${e.toString()}');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getUserInfo() async {
+    try {
+      final url = Uri.parse('$baseUrl/auth/me');
+      final response = await http.get(
+        url,
+        headers: await _headersWithToken,
+      ).timeout(timeout);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final data = jsonDecode(response.body);
+        if (data != null && data is Map<String, dynamic>) {
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Lỗi khi đọc thông tin người dùng: [31m${e.toString()}[0m');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> sendMessage({
+    required int receiverId,
+    required String content,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl/messages/send/$receiverId');
+      final response = await http.post(
+        url,
+        headers: await _headersWithToken,
+        body: jsonEncode({'content': content}),
+      ).timeout(timeout);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final data = jsonDecode(response.body);
+        if (data != null && data is Map<String, dynamic>) {
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Lỗi gửi tin nhắn: $e');
+      return null;
+    }
+  }
+
+  static Future<List<dynamic>> getConversation(int userId) async {
+    try {
+      final url = Uri.parse('$baseUrl/messages/conversation/$userId');
+      final response = await http.get(
+        url,
+        headers: await _headersWithToken,
+      ).timeout(timeout);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final data = jsonDecode(response.body);
+        if (data != null && data is List) {
+          return data;
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Lỗi lấy hội thoại: $e');
+      return [];
+    }
+  }
+
+  static Future<List<dynamic>> getConversations() async {
+    try {
+      final url = Uri.parse('$baseUrl/messages/conversations');
+      final response = await http.get(
+        url,
+        headers: await _headersWithToken,
+      ).timeout(timeout);
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final data = jsonDecode(response.body);
+        if (data != null && data is List) {
+          return data;
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Lỗi lấy danh sách hội thoại: $e');
+      return [];
     }
   }
 }

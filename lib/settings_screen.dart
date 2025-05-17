@@ -12,6 +12,25 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  String userId = '';
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await ApiService.getCurrentUser();
+    if (mounted) {
+      setState(() {
+        userId = userInfo?['id']?.toString() ?? '';
+        isLoading = false;
+      });
+    }
+  }
+
   void showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -45,14 +64,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     await ApiService.logout();
     if (!mounted) return;
-    
+
     NotificationHelper.showSuccess(context, 'Đăng xuất thành công!');
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
-    
+
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (route) => false,
+          (route) => false,
     );
   }
 
@@ -104,7 +123,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 8),
                     _InfoRow(icon: Icons.balance, label: "Biến động số dư"),
                     const SizedBox(height: 8),
-                    _InfoRow(icon: Icons.info, label: "ID: son0570", value: "https://playerduo.net/67c6ab9901e43d2c4bdc4c60", isLink: true),
+                    isLoading 
+                      ? const Center(child: CircularProgressIndicator())
+                      : _InfoRow(
+                          icon: Icons.info, 
+                          label: "ID", 
+                          value: userId,
+                          isLink: true
+                        ),
                     const SizedBox(height: 8),
                     _InfoRow(icon: Icons.share, label: "Chia sẻ link"),
                     const SizedBox(height: 24),
@@ -137,20 +163,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + 12),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepOrange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              onPressed: handleLogout,
+              child: const Text("Đăng xuất", style: TextStyle(fontSize: 18, color: Colors.white)),
             ),
-            onPressed: handleLogout,
-            child: const Text("Đăng xuất", style: TextStyle(fontSize: 18, color: Colors.white)),
           ),
         ),
       ),

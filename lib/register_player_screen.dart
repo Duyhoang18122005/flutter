@@ -46,8 +46,12 @@ class _RegisterPlayerScreenState extends State<RegisterPlayerScreen> {
       );
       Navigator.pop(context);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        const SnackBar(
+          content: Text('Bạn đã đăng ký làm player rồi!'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
