@@ -4,6 +4,7 @@ import 'login_screen.dart';
 import 'settings_screen.dart';
 import 'message_list_screen.dart';
 
+
 void main() {
   runApp(const PlayerDuoApp());
 }
@@ -61,8 +62,8 @@ class _MainNavigationState extends State<MainNavigation> {
             label: 'PD',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Kết nối',
+            icon: Icon(Icons.search),
+            label: 'Khám Phá',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chat_bubble_outline),
